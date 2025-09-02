@@ -790,7 +790,7 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
     {
         if (f >= 0 && f <= 0x8000)
         {
-            flags |= (CXTranslationUnit_Flags)f;
+            flags |= f;
         }
     }
 
