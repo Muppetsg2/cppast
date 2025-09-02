@@ -18,6 +18,8 @@ namespace detail
 
         static const std::vector<std::string>& flags(const libclang_compile_config& config);
 
+        static const std::vector<int>& translation_unit_flags(const libclang_compile_config& config);
+
         static bool write_preprocessed(const libclang_compile_config& config);
 
         static bool fast_preprocessing(const libclang_compile_config& config);
@@ -178,6 +180,8 @@ public:
 
 private:
     void do_set_flags(cpp_standard standard, compile_flags flags) override;
+
+    void do_set_translation_unit_flags(translation_unit_flags flags) override;
 
     bool do_enable_feature(std::string name) override;
 

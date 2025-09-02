@@ -32,6 +32,12 @@ const std::vector<std::string>& detail::libclang_compile_config_access::flags(
     return config.get_flags();
 }
 
+const std::vector<int>& detail::libclang_compile_config_access::translation_unit_flags(
+    const libclang_compile_config& config)
+{
+    return config.get_translation_unit_flags();
+}
+
 bool detail::libclang_compile_config_access::write_preprocessed(
     const libclang_compile_config& config)
 {
@@ -618,6 +624,18 @@ void libclang_compile_config::do_set_flags(cpp_standard standard, compile_flags 
         add_flag("-fms-extensions");
 }
 
+void libclang_compile_config::do_set_translation_unit_flags(translation_unit_flags flags)
+{
+    if (flags & translation_unit_flag::skip_function_bodies)
+        add_translation_unit_flag(0x40);
+
+    if (flags & translation_unit_flag::single_file_parse)
+        add_translation_unit_flag(0x400);
+
+    if (flags & translation_unit_flag::visit_implicit_attributes)
+        add_translation_unit_flag(0x2000);
+}
+
 bool libclang_compile_config::do_enable_feature(std::string name)
 {
     add_flag("-f" + std::move(name));
@@ -704,6 +722,14 @@ std::vector<const char*> get_arguments(const libclang_compile_config& config)
     return args;
 }
 
+std::vector<int> get_translation_flags(const libclang_compile_config& config)
+{
+    std::vector<int> args = {};
+    for (auto& flag : detail::libclang_compile_config_access::translation_unit_flags(config))
+        args.push_back(flag);
+    return args;
+}
+
 type_safe::optional<severity> get_severity(const CXDiagnostic& diag)
 {
     switch (clang_getDiagnosticSeverity(diag))
@@ -754,9 +780,19 @@ detail::cxtranslation_unit get_cxunit(const diagnostic_logger& logger, const det
 
     auto args = get_arguments(config);
 
+    auto tuflags = get_translation_flags(config);
+
     CXTranslationUnit tu;
     auto              flags = CXTranslationUnit_Incomplete | CXTranslationUnit_KeepGoing
                  | CXTranslationUnit_DetailedPreprocessingRecord;
+
+    for (auto f : tuflags)
+    {
+        if (f >= 0 && f <= 0x8000)
+        {
+            flags |= (CXTranslationUnit_Flags)f;
+        }
+    }
 
     auto error
         = clang_parseTranslationUnit2(idx.get(), path, // index and path

@@ -117,8 +117,21 @@ enum class compile_flag
     _flag_set_size, //< \exclude
 };
 
+/// Flags for CXTranslationUnit
+enum class translation_unit_flag
+{
+    skip_function_bodies, //< Equivalent of CXTranslationUnit_SkipFunctionBodies
+    single_file_parse, //< Equivalent of CXTranslationUnit_SingleFileParse 
+    visit_implicit_attributes, //< Equivalent of CXTranslationUnit_VisitImplicitAttributes
+
+    _flag_set_size, //< \exclude
+};
+
 /// A [ts::flag_set]() of [cppast::compile_flag]().
 using compile_flags = type_safe::flag_set<compile_flag>;
+
+/// A [ts::flag_set]() of [cppast::translation_unit_flag]().
+using translation_unit_flags = type_safe::flag_set<translation_unit_flag>;
 
 /// Base class for the configuration of a [cppast::parser]().
 class compile_config
@@ -128,6 +141,12 @@ public:
     void set_flags(cpp_standard standard, compile_flags flags = {})
     {
         do_set_flags(standard, flags);
+    }
+
+    /// \effects Sets the given clang translation unit flags.
+    void set_translation_unit_flags(translation_unit_flags flags)
+    {
+        do_set_translation_unit_flags(flags);
     }
 
     /// \effects Enables an `-fXXX` flag.
@@ -181,14 +200,27 @@ protected:
         flags_.push_back(std::move(flag));
     }
 
+    void add_translation_unit_flag(int flag)
+    {
+        translation_unit_flags_.push_back(flag);
+    }
+
     const std::vector<std::string>& get_flags() const noexcept
     {
         return flags_;
     }
 
+    const std::vector<int>& get_translation_unit_flags() const noexcept
+    {
+        return translation_unit_flags_;
+    }
+
 private:
     /// \effects Sets the given C++ standard and compilation flags.
     virtual void do_set_flags(cpp_standard standard, compile_flags flags) = 0;
+
+    /// \effects Sets the given clang translation unit flags.
+    virtual void do_set_translation_unit_flags(translation_unit_flags flags) = 0;
 
     /// \effects Sets the given feature flags.
     /// \returns Whether or not it was a known feature and set.
@@ -215,6 +247,7 @@ private:
     virtual bool do_use_c() const noexcept = 0;
 
     std::vector<std::string> flags_;
+    std::vector<int> translation_unit_flags_;
 };
 } // namespace cppast
 
