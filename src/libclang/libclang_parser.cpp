@@ -300,9 +300,9 @@ cppast::libclang_compile_config::libclang_compile_config(
         // If ++ exists within the compiler name (e.g. clang++, g++, etc), use C++
         std::string exe(clang_getCString(clang_CompileCommand_getArg(cmd, 0)));
         use_c_ = (exe.find("++", 0) == std::string::npos);
-
+		
         auto dir = detail::cxstring(clang_CompileCommand_getDirectory(cmd));
-
+		
         auto no_args = clang_CompileCommand_getNumArgs(cmd);
         bool is_MSVC = false;
         if (no_args > 1)
@@ -331,7 +331,7 @@ cppast::libclang_compile_config::libclang_compile_config(
                 else if (flag == "-std")
                 {
                     use_c_ = (args.find("++") == std::string::npos);
-                    add_flag(std::move(flag) + "=" + std::move("c++2c"));
+                    add_flag(std::move(flag) + "=c++2c");
                 }
                 else if (flag == "-f")
                     // other options
@@ -349,28 +349,28 @@ cppast::libclang_compile_config::libclang_compile_config(
         else
         {
             parse_flags(cmd, [&](std::string flag, std::string args) {
-            if (flag == "-I")
-                add_flag(std::move(flag) + get_full_path(dir, args));
-            else if (flag == "-isystem")
-                add_flag(std::move(flag) + get_full_path(dir, args));
-            else if (flag == "-D" || flag == "-U")
-            {
-                // preprocessor options
-                for (auto c : args)
-                    if (c == '"')
-                        flag += "\\\"";
-                    else
-                        flag += c;
-                add_flag(std::move(flag));
-            }
-            else if (flag == "-std")
-            {
-                use_c_ = (args.find("++") == std::string::npos);
-                add_flag(std::move(flag) + "=" + std::move(args));
-            }
-            else if (flag == "-f")
-                // other options
-                    add_flag(std::move(flag) + std::move(args));
+                if (flag == "-I")
+                    add_flag(std::move(flag) + get_full_path(dir, args));
+                else if (flag == "-isystem")
+                    add_flag(std::move(flag) + get_full_path(dir, args));
+                else if (flag == "-D" || flag == "-U")
+                {
+                    // preprocessor options
+                    for (auto c : args)
+                        if (c == '"')
+                            flag += "\\\"";
+                        else
+                            flag += c;
+                    add_flag(std::move(flag));
+                }
+                else if (flag == "-std")
+                {
+                    use_c_ = (args.find("++") == std::string::npos);
+                    add_flag(std::move(flag) + "=" + std::move(args));
+                }
+                else if (flag == "-f")
+                    // other options
+                        add_flag(std::move(flag) + std::move(args));
                 else if (flag == "-x")
                 {
                     // language
