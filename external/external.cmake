@@ -11,6 +11,10 @@ if(NOT type_safe_FOUND)
     message(STATUS "Fetching type_safe")
     FetchContent_Declare(type_safe GIT_REPOSITORY https://github.com/foonathan/type_safe GIT_TAG origin/main)
     FetchContent_MakeAvailable(type_safe)
+
+    if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	    set_property(TARGET type_safe PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endif()
 
 #
@@ -19,10 +23,20 @@ endif()
 find_package(Threads REQUIRED QUIET)
 
 # create a target here instead of using the one provided
+if(CPPAST_USE_STATIC_LIBS)
+    set(BUILD_STATIC ON CACHE BOOL "" FORCE)
+else()
+	set(BUILD_STATIC OFF CACHE BOOL "" FORCE)
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/tpl)
 add_library(_cppast_tiny_process INTERFACE)
 target_include_directories(_cppast_tiny_process INTERFACE ${tiny_process_dir})
 target_link_libraries(_cppast_tiny_process INTERFACE tiny-process-library::tiny-process-library Threads::Threads)
+
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	set_property(TARGET _cppast_tiny_process tiny-process-library Threads::Threads PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 #
 # install cxxopts, if needed
@@ -33,6 +47,10 @@ if(build_tool)
     message(STATUS "Fetching cxxopts")
     FetchContent_Declare(cxxopts URL https://github.com/jarro2783/cxxopts/archive/v2.2.1.zip)
     FetchContent_MakeAvailable(cxxopts)
+
+    if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	    set_property(TARGET cxxopts PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endif()
 
 #
@@ -232,3 +250,7 @@ target_include_directories(_cppast_libclang INTERFACE ${LIBCLANG_INCLUDE_DIR})
 target_compile_definitions(_cppast_libclang INTERFACE
                            CPPAST_CLANG_BINARY="${CLANG_BINARY}"
                            CPPAST_CLANG_VERSION_STRING="${LLVM_VERSION}")
+
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+    set_property(TARGET _cppast_libclang PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()

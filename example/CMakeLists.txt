@@ -5,6 +5,10 @@
 function(_cppast_example name)
     add_executable(cppast_example_${name} ${name}.cpp example_parser.hpp)
     target_link_libraries(cppast_example_${name} PUBLIC cppast)
+
+    if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	    set_property(TARGET cppast_example_${name} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
 endfunction()
 
 _cppast_example(ast_printer)

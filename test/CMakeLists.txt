@@ -8,6 +8,10 @@ include(FetchContent)
 FetchContent_Declare(catch URL https://github.com/catchorg/Catch2/archive/refs/tags/v2.13.9.zip)
 FetchContent_MakeAvailable(catch)
 
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	set_property(TARGET Catch2 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 set(tests
         code_generator.cpp
         cpp_alias_template.cpp
@@ -47,6 +51,10 @@ target_include_directories(cppast_test PRIVATE ${CMAKE_CURRENT_LIST_DIR}/../src 
 target_link_libraries(cppast_test PUBLIC cppast Catch2)
 target_compile_definitions(cppast_test PUBLIC CPPAST_INTEGRATION_FILE="${CMAKE_CURRENT_SOURCE_DIR}/integration.cpp"
                                               CPPAST_COMPILE_COMMANDS="${CMAKE_BINARY_DIR}")
+
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	set_property(TARGET cppast_test PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 
 add_test(NAME unit_test COMMAND cppast_test "~[integration]")
 add_test(NAME integration_test COMMAND cppast_test "[integration]")

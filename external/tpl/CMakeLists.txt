@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.10)
 
 project(tiny-process-library)
 
@@ -8,13 +8,27 @@ else()
   option(BUILD_TESTING "set ON to build library tests" OFF)
 endif()
 
-add_library(tiny-process-library process.cpp)
+if(BUILD_SHARED_LIBS)
+  option(BUILD_STATIC "set ON to build library as static" OFF)
+else()
+  option(BUILD_STATIC "set ON to build library as static" ON)
+endif()
+
+if(BUILD_STATIC)
+  add_library(tiny-process-library STATIC process.cpp)
+else()
+  add_library(tiny-process-library SHARED process.cpp)
+endif()
 add_library(tiny-process-library::tiny-process-library ALIAS tiny-process-library)
 
 if(MSVC)
   target_compile_definitions(tiny-process-library PRIVATE /D_CRT_SECURE_NO_WARNINGS)
 else()
   target_compile_options(tiny-process-library PRIVATE -std=c++11 -Wall -Wextra)
+endif()
+
+if(MSVC AND BUILD_STATIC)
+  set_property(TARGET tiny-process-library PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
 if(WIN32)
@@ -30,6 +44,10 @@ endif()
 
 find_package(Threads REQUIRED)
 
+if(MSVC AND BUILD_STATIC)
+  set_property(TARGET Threads::Threads PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 target_link_libraries(tiny-process-library ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(tiny-process-library PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
                                                        $<INSTALL_INTERFACE:include>)
@@ -44,6 +62,9 @@ if(CMAKE_SOURCE_DIR STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
 
   add_executable(examples examples.cpp)
   target_link_libraries(examples tiny-process-library)
+  if(MSVC AND BUILD_STATIC)
+    set_property(TARGET examples PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  endif()
   
   install(TARGETS tiny-process-library
     EXPORT ${PROJECT_NAME}-config

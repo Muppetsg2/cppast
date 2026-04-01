@@ -6,4 +6,8 @@ add_executable(cppast_tool main.cpp)
 target_link_libraries(cppast_tool PUBLIC cppast cxxopts)
 set_target_properties(cppast_tool PROPERTIES CXX_STANDARD 11 OUTPUT_NAME cppast)
 
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+    set_property(TARGET cppast_tool PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 install(TARGETS cppast_tool)

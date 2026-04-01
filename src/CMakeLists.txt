@@ -114,16 +114,29 @@ target_compile_definitions(cppast PUBLIC
                                 CPPAST_VERSION_MAJOR="${cppast_VERSION_MAJOR}"
                                 CPPAST_VERSION_STRING="${cppast_VERSION}")
 
+if(MSVC AND CPPAST_USE_STATIC_LIBS)
+	set_property(TARGET cppast PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 if(${is_top_level_project})
     target_compile_options(cppast PRIVATE
-                               # clang/GCC warnings
-                               $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:GNU>>:
+                               # GCC/clang with GNU frontend warnings
+                               $<$<OR:$<CXX_COMPILER_ID:GNU>,$<AND:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_FRONTEND_VARIANT:GNU>>>:
                                -pedantic-errors -Werror -Wall -Wextra -Wconversion -Wsign-conversion>
                                # disable noexcept type warning on GCC
                                $<$<CXX_COMPILER_ID:GNU>: -Wno-noexcept-type>
-                               # MSVC warnings
-                               $<$<CXX_COMPILER_ID:MSVC>:
-                               /W3>)
+                               # MSVC/clang with MSVC frontend warnings
+                               $<$<OR:$<CXX_COMPILER_ID:MSVC>,$<AND:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_FRONTEND_VARIANT:MSVC>>>:
+                               /W3>
+    )
+
+    if(CPPAST_USE_STATIC_LIBS)
+        target_link_options(cppast PRIVATE
+                                   # GCC/clang with GNU frontend warnings
+                                   $<$<OR:$<CXX_COMPILER_ID:GNU>,$<AND:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_FRONTEND_VARIANT:GNU>>>:
+                                   -static>
+        )
+    endif()
 endif()
 
 install(TARGETS cppast)
