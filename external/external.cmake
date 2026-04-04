@@ -23,12 +23,6 @@ endif()
 find_package(Threads REQUIRED QUIET)
 
 # create a target here instead of using the one provided
-if(CPPAST_USE_STATIC_LIBS)
-    set(BUILD_STATIC ON CACHE BOOL "" FORCE)
-else()
-	set(BUILD_STATIC OFF CACHE BOOL "" FORCE)
-endif()
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/tpl)
 add_library(_cppast_tiny_process INTERFACE)
 target_include_directories(_cppast_tiny_process INTERFACE ${tiny_process_dir})
@@ -45,7 +39,7 @@ if(build_tool)
     set(CXXOPTS_BUILD_TESTS OFF CACHE BOOL "")
 
     message(STATUS "Fetching cxxopts")
-    FetchContent_Declare(cxxopts URL https://github.com/jarro2783/cxxopts/archive/v2.2.1.zip)
+    FetchContent_Declare(cxxopts URL https://github.com/jarro2783/cxxopts/archive/v3.3.1.zip)
     FetchContent_MakeAvailable(cxxopts)
 
     if(MSVC AND CPPAST_USE_STATIC_LIBS)

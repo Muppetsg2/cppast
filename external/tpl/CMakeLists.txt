@@ -8,17 +8,7 @@ else()
   option(BUILD_TESTING "set ON to build library tests" OFF)
 endif()
 
-if(BUILD_SHARED_LIBS)
-  option(BUILD_STATIC "set ON to build library as static" OFF)
-else()
-  option(BUILD_STATIC "set ON to build library as static" ON)
-endif()
-
-if(BUILD_STATIC)
-  add_library(tiny-process-library STATIC process.cpp)
-else()
-  add_library(tiny-process-library SHARED process.cpp)
-endif()
+add_library(tiny-process-library STATIC process.cpp)
 add_library(tiny-process-library::tiny-process-library ALIAS tiny-process-library)
 
 if(MSVC)
