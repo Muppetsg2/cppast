@@ -155,7 +155,7 @@ void detail::for_each_file(const libclang_compilation_database& database, void* 
 }
 
 void detail::m_for_each_file(const libclang_compilation_database& database, void* user_data,
-                           void (*callback)(void*, std::string, std::string))
+                             void (*callback)(void*, std::string, std::string))
 {
     cxcompile_commands commands(
         clang_CompilationDatabase_getAllCompileCommands(database.database_));
@@ -164,7 +164,7 @@ void detail::m_for_each_file(const libclang_compilation_database& database, void
     {
         auto cmd = clang_CompileCommands_getCommand(commands.get(), i);
 
-        auto dir = cxstring(clang_CompileCommand_getDirectory(cmd));
+        auto dir      = cxstring(clang_CompileCommand_getDirectory(cmd));
         auto fileName = cxstring(clang_CompileCommand_getFilename(cmd)).std_str();
         callback(user_data, fileName, get_full_path(dir, fileName));
     }
@@ -181,7 +181,7 @@ const char* find_MSVC_flag_arg_sep(const std::string& last_flag)
 {
     if (last_flag[1] == 'I')
         // no  separator, equal is part of the arg
-            return nullptr;
+        return nullptr;
     return std::strchr(last_flag.c_str(), ':');
 }
 
@@ -197,7 +197,7 @@ void parse_MSVC_flags(CXCompileCommand cmd, Func callback)
             // process last flag
             std::string args;
             std::string flags = str.std_str();
-            
+
             if (auto ptr = find_MSVC_flag_arg_sep(flags))
             {
                 auto pos = std::size_t(ptr - flags.c_str());
@@ -300,9 +300,9 @@ cppast::libclang_compile_config::libclang_compile_config(
         // If ++ exists within the compiler name (e.g. clang++, g++, etc), use C++
         std::string exe(clang_getCString(clang_CompileCommand_getArg(cmd, 0)));
         use_c_ = (exe.find("++", 0) == std::string::npos);
-		
+
         auto dir = detail::cxstring(clang_CompileCommand_getDirectory(cmd));
-		
+
         auto no_args = clang_CompileCommand_getNumArgs(cmd);
         bool is_MSVC = false;
         if (no_args > 1)
@@ -370,7 +370,7 @@ cppast::libclang_compile_config::libclang_compile_config(
                 }
                 else if (flag == "-f")
                     // other options
-                        add_flag(std::move(flag) + std::move(args));
+                    add_flag(std::move(flag) + std::move(args));
                 else if (flag == "-x")
                 {
                     // language
@@ -629,11 +629,17 @@ void libclang_compile_config::do_set_translation_unit_flags(translation_unit_fla
     if (flags & translation_unit_flag::skip_function_bodies)
         add_translation_unit_flag(0x40);
 
+    if (flags & translation_unit_flag::keep_going)
+        add_translation_unit_flag(0x200);
+
     if (flags & translation_unit_flag::single_file_parse)
         add_translation_unit_flag(0x400);
 
     if (flags & translation_unit_flag::visit_implicit_attributes)
         add_translation_unit_flag(0x2000);
+
+    if (flags & translation_unit_flag::ignore_non_errors_from_included_files)
+        add_translation_unit_flag(0x4000);
 }
 
 bool libclang_compile_config::do_enable_feature(std::string name)
@@ -850,14 +856,16 @@ try
 
     // support header files
     std::string processedPath = path;
-    if (processedPath.back() == 'h' && (processedPath.size() > 4 && processedPath[processedPath.size() - 4] != '.'))
+    if (processedPath.back() == 'h'
+        && (processedPath.size() > 4 && processedPath[processedPath.size() - 4] != '.'))
     {
         processedPath += "pp";
     }
 
     // parse
-    auto tu   = get_cxunit(logger(), pimpl_->index, config, processedPath.c_str(), preprocessed.source);
-    auto file = clang_getFile(tu.get(), processedPath.c_str());
+    auto tu
+        = get_cxunit(logger(), pimpl_->index, config, processedPath.c_str(), preprocessed.source);
+    auto file     = clang_getFile(tu.get(), processedPath.c_str());
     auto fileName = detail::cxstring(clang_getFileName(file)).std_str();
 
     cpp_file::builder builder(fileName == path ? fileName : path);

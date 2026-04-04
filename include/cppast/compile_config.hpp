@@ -120,9 +120,12 @@ enum class compile_flag
 /// Flags for CXTranslationUnit
 enum class translation_unit_flag
 {
-    skip_function_bodies, //< Equivalent of CXTranslationUnit_SkipFunctionBodies
-    single_file_parse, //< Equivalent of CXTranslationUnit_SingleFileParse 
+    skip_function_bodies,      //< Equivalent of CXTranslationUnit_SkipFunctionBodies
+    keep_going,                //< Equivalent of CXTranslationUnit_KeepGoing
+    single_file_parse,         //< Equivalent of CXTranslationUnit_SingleFileParse
     visit_implicit_attributes, //< Equivalent of CXTranslationUnit_VisitImplicitAttributes
+    ignore_non_errors_from_included_files, //< Equivalent of
+                                           // CXTranslationUnit_IgnoreNonErrorsFromIncludedFiles
 
     _flag_set_size, //< \exclude
 };
@@ -247,7 +250,7 @@ private:
     virtual bool do_use_c() const noexcept = 0;
 
     std::vector<std::string> flags_;
-    std::vector<int> translation_unit_flags_;
+    std::vector<int>         translation_unit_flags_;
 };
 } // namespace cppast
 
